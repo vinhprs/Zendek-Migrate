@@ -1,13 +1,18 @@
 import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './schema/users.entity';
+import { User } from './users.entity';
+import { UsersController } from './users.controller';
+import {HttpModule} from '@nestjs/axios';
+import { Api } from '../fetch/zendesk';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User])
+    TypeOrmModule.forFeature([User]),
+    HttpModule
   ],
-  providers: [UsersService],
-  exports: [UsersService]
+  providers: [UsersService, Api],
+  exports: [UsersService],
+  controllers: [UsersController]
 })
 export class UsersModule {}

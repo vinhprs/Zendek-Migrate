@@ -1,36 +1,33 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './schema/users.entity';
+import { User } from './users.entity';
 import { Repository } from 'typeorm';
-import { SignupInput } from 'src/auth/dto/auth.dto';
-import { LoginRespone } from 'src/common/response';
-import * as bcrypt from 'bcrypt';
-
+import * as fs from 'fs';
+import {join} from 'path';
+import { Api } from '../fetch/zendesk';
+import { Attachments } from 'src/attachments/entities/attachment.entity';
 @Injectable()
 export class UsersService {
+    DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
+    PATH: string = '/users'
     constructor(
         @InjectRepository(User)
-        private readonly UserRepository: Repository<User>
+        private readonly UserRepository: Repository<User>,
+        private readonly api: Api
     ) {}
 
-    async getUserByUsername(userName: string) 
-    : Promise<User> {
-        const user = await this.UserRepository.findOneBy({userName});
+    async syncUser()
+    : Promise<any> {
+        let currentPage = await this.api.get(this.DOMAIN, this.PATH);
+        let i = 1;
+        while(currentPage.next_page) {
+            i++;
+            const users: User[] = currentPage.users;
+            currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`);
+            await this.UserRepository.save(users);
 
-        return user;
-    }
-
-    async validateSignupInput(signupInput: SignupInput)
-    : Promise<User> {
-        const { userName, password } = signupInput;
-        const user = await this.getUserByUsername(userName);
-
-        if(user) {
-            throw new BadRequestException('This username is exist!');
         }
-        const newUser = new User();
-        newUser.userName = userName;
-        newUser.password = await bcrypt.hash(password, 8);
-        return await this.UserRepository.save(newUser);
+        const users: User[] = currentPage.users;
+        await this.UserRepository.save(users);
     }
 }
