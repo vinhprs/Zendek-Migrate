@@ -9,6 +9,20 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { Attachments } from './attachments/entities/attachment.entity';
 import { Organization } from './organizations/entities/organization.entity';
+import { TicketsModule } from './tickets/tickets.module';
+import { Ticket } from './tickets/ticket.entity';
+import { FieldModule } from './field/field.module';
+import { ViaModule } from './via/via.module';
+import { ChannelModule } from './channel/channel.module';
+import { SourceModule } from './source/source.module';
+import { FromModule } from './from/from.module';
+import { From } from './from/entities/from.entity';
+import { Source } from './source/entities/source.entity';
+import { Channel } from './channel/entities/channel.entity';
+import { Via } from './via/entities/via.entity';
+import { Field } from './field/entities/field.entity';
+import { ToModule } from './to/to.module';
+import { To } from './to/entities/to.entity';
 
 @Module({
   imports: [
@@ -25,13 +39,27 @@ import { Organization } from './organizations/entities/organization.entity';
       entities: [
         User,
         Attachments,
-        Organization
+        Organization,
+        Ticket,
+        Field,
+        Via,
+        Channel,
+        Source,
+        From,
+        To
       ],
       synchronize: true,
     }),
     UsersModule,
     OrganizationsModule,
-    AttachmentsModule
+    AttachmentsModule,
+    TicketsModule,
+    FieldModule,
+    ViaModule,
+    ChannelModule,
+    SourceModule,
+    FromModule,
+    ToModule
   ],
   controllers: [AppController],
   providers: [AppService],

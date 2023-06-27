@@ -25,7 +25,6 @@ export class UsersService {
             const users: User[] = currentPage.users;
             currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`);
             await this.UserRepository.save(users);
-
         }
         const users: User[] = currentPage.users;
         await this.UserRepository.save(users);
