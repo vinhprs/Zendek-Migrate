@@ -14,4 +14,10 @@ export class OrganizationsController {
     return this.organizationsService.syncOrganizations();
   }
 
+  @Get('/migrate')
+  async migrate()
+  : Promise<any> {
+    return this.organizationsService.migrate();
+  }
+
 }

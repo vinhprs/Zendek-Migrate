@@ -13,4 +13,10 @@ export class UsersController {
     : Promise<any> {
         await this.usersService.syncUser();
     }
+
+    @Get('/migrate')
+    async migrate()
+    : Promise<any> {
+        return this.usersService.migrate();
+    }
 }
