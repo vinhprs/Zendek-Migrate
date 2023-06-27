@@ -1,6 +1,6 @@
 import { Field } from "src/field/entities/field.entity";
 import { Via } from "src/via/entities/via.entity";
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, OneToOne, PrimaryColumn } from "typeorm";
 
 @Entity()
 export class Ticket {
@@ -91,13 +91,13 @@ export class Ticket {
     @OneToOne(() => Field, custom_fields => custom_fields.ticket)
     custom_fields: Field;
 
-    @Column('boolean', {nullable: true, default: null})
+    @Column('bigint', {nullable: true, default: null})
     satisfaction_rating: number;
 
-    @Column('boolean', {nullable: true, default: null, array: true})
+    @Column('bigint', {nullable: true, default: null, array: true})
     sharing_agreement_ids: number[];
 
-    @Column('boolean', {nullable: true, default: null})
+    @Column('bigint', {nullable: true, default: null})
     custom_status_id: number;
 
     @OneToOne(() => Field, fields => fields.ticket)

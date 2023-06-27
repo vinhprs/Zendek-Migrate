@@ -16,10 +16,8 @@ export class TicketsService {
     async syncTicket() {
         let currentPage = await this.api.get(this.DOMAIN, this.PATH + `?start_time=1332034771`);
         while(currentPage.after_url) {
-            // i++;
             const tickets: Ticket[] = currentPage.tickets;
-            // currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`);
-            currentPage = await this.api.get(currentPage.after_url, "");
+            currentPage = await this.api.get(this.DOMAIN, this.PATH + `?cursor=${currentPage.after_cursor}`);
             await this.TicketRepository.save(tickets);
         }
         const tickets: Ticket[] = currentPage.tickets;
