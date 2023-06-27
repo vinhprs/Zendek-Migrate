@@ -9,6 +9,7 @@ import { Attachments } from 'src/attachments/entities/attachment.entity';
 @Injectable()
 export class UsersService {
     DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
+    DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
     PATH: string = '/users'
     constructor(
         @InjectRepository(User)
@@ -24,10 +25,23 @@ export class UsersService {
             i++;
             const users: User[] = currentPage.users;
             currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`);
-            await this.UserRepository.save(users);
+            for(const user of users) {
+                const request = JSON.parse(JSON.stringify({user}))
+                await this.api.post(this.DOMAIN_WOWI, this.PATH, request);
+            }
+            // await this.UserRepository.save(users);
 
         }
         const users: User[] = currentPage.users;
-        await this.UserRepository.save(users);
+        // await this.UserRepository.save(users);
+    }
+
+    async migrate()
+    : Promise<any> {
+        const data = await this.UserRepository.find({});
+        for(const user of data) {
+            const request = JSON.parse(JSON.stringify({user}))
+            await this.api.post(this.DOMAIN_WOWI, this.PATH, request);
+        }
     }
 }

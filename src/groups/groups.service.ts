@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class GroupsService {
   DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
+  DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
   PATH: string = '/groups'
   constructor(
     private readonly api: Api,
@@ -22,5 +23,14 @@ export class GroupsService {
     const groups = data.groups;
 
     return await this.groupsRepository.save(groups);
+  }
+
+  async migrate() 
+  : Promise<any> {
+    const data = await this.groupsRepository.find({});
+    for(const org of data ) {
+      const request = JSON.parse(JSON.stringify({group: org}));
+      await this.api.post(this.DOMAIN_WOWI, this.PATH, request)
+    }
   }
 }

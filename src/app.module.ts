@@ -13,6 +13,7 @@ import { LocalesModule } from './locales/locales.module';
 import { Locale } from './locales/entities/locale.entity';
 import { GroupsModule } from './groups/groups.module';
 import { Groups } from './groups/entities/group.entity';
+import { CustomRolesModule } from './custom-roles/custom-roles.module';
 
 @Module({
   imports: [
@@ -39,7 +40,8 @@ import { Groups } from './groups/entities/group.entity';
     OrganizationsModule,
     AttachmentsModule,
     LocalesModule,
-    GroupsModule
+    GroupsModule,
+    CustomRolesModule
   ],
   controllers: [AppController],
   providers: [AppService],

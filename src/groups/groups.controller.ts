@@ -11,4 +11,10 @@ export class GroupsController {
   : Promise<Groups[]> {
     return this.groupsService.syncGroups();
   }
+
+  @Get('/migrate')
+  async migrate()
+  : Promise<any> {
+    return this.groupsService.migrate();
+  }
 }

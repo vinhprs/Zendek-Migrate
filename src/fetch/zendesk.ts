@@ -29,4 +29,28 @@ export class Api {
                 console.log(e.message)
             });
     }
+
+    async post(
+      domain: string,
+      path: string,
+      data: any
+    ) : Promise<any> {
+        const axiosConfig = {
+            method: 'POST',
+            url: encodeURI(domain + path),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            auth: {
+                username: "conaneku01@gmail.com",
+                password: "123456a@"
+            },
+            data
+        }
+        return firstValueFrom(this.httpService.request(axiosConfig))
+          .then((res) => res.data)
+          .catch((e) => {
+              console.log(e.message, axiosConfig.data)
+          });
+    }
 }

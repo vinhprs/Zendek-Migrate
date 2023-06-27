@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 @Injectable()
 export class OrganizationsService {
   DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
+  DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
   PATH: string = '/organizations';
   constructor(
     private readonly api: Api,
@@ -22,5 +23,12 @@ export class OrganizationsService {
       const organizations : Organization[] = data.organizations;
 
       return await this.organizationRepository.save(organizations);
+  }
+
+  async migrate()
+  : Promise<any> {
+    const data = await this.organizationRepository.find({});
+    const request = JSON.parse(JSON.stringify({organizations: data}));
+    await this.api.post(this.DOMAIN_WOWI, this.PATH + '/create_many', request);
   }
 }
