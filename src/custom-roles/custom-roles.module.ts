@@ -11,6 +11,7 @@ import { Api } from '../fetch/zendesk';
     HttpModule,
   ],
   controllers: [CustomRolesController],
-  providers: [CustomRolesService, Api]
+  providers: [CustomRolesService, Api],
+  exports: [CustomRolesService]
 })
 export class CustomRolesModule {}
