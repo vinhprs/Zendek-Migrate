@@ -23,6 +23,10 @@ import { Via } from './via/entities/via.entity';
 import { Field } from './field/entities/field.entity';
 import { ToModule } from './to/to.module';
 import { To } from './to/entities/to.entity';
+import { LocalesModule } from './locales/locales.module';
+import { Locale } from './locales/entities/locale.entity';
+import { GroupsModule } from './groups/groups.module';
+import { Groups } from './groups/entities/group.entity';
 
 @Module({
   imports: [
@@ -46,7 +50,9 @@ import { To } from './to/entities/to.entity';
         Channel,
         Source,
         From,
-        To
+        To,
+        Locale,
+        Groups
       ],
       synchronize: true,
     }),
@@ -59,7 +65,9 @@ import { To } from './to/entities/to.entity';
     ChannelModule,
     SourceModule,
     FromModule,
-    ToModule
+    ToModule,
+    LocalesModule,
+    GroupsModule
   ],
   controllers: [AppController],
   providers: [AppService],

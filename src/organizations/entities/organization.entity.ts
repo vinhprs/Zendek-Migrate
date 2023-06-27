@@ -17,8 +17,8 @@ export class Organization {
     @Column('boolean', {nullable: false})
     shared_comments: boolean;
 
-    @Column('varchar', {nullable: true, default: null})
-    external_id: string;
+    @Column('bigint', {nullable: true, default: null})
+    external_id: number;
 
     @Column('timestamp', {nullable: true, default: null})
     created_at: Date;
