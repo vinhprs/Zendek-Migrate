@@ -9,6 +9,10 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { Attachments } from './attachments/entities/attachment.entity';
 import { Organization } from './organizations/entities/organization.entity';
+import { LocalesModule } from './locales/locales.module';
+import { Locale } from './locales/entities/locale.entity';
+import { GroupsModule } from './groups/groups.module';
+import { Groups } from './groups/entities/group.entity';
 
 @Module({
   imports: [
@@ -25,13 +29,17 @@ import { Organization } from './organizations/entities/organization.entity';
       entities: [
         User,
         Attachments,
-        Organization
+        Organization,
+        Locale,
+        Groups
       ],
       synchronize: true,
     }),
     UsersModule,
     OrganizationsModule,
-    AttachmentsModule
+    AttachmentsModule,
+    LocalesModule,
+    GroupsModule
   ],
   controllers: [AppController],
   providers: [AppService],
