@@ -3,10 +3,10 @@ import { Column, Entity, OneToOne, PrimaryColumn } from "typeorm";
 
 @Entity()
 export class Field {
-    @PrimaryColumn()
+    @PrimaryColumn('bigint')
     id: number;
 
-    @Column({ nullable: true, default: null })
+    @Column('varchar', { nullable: true, default: null })
     value: string;
 
     @OneToOne(() => Ticket, (ticket: Ticket) => ticket.custom_fields)

@@ -6,10 +6,10 @@ export class From {
     @PrimaryGeneratedColumn()
     id: number;
     
-    @Column({nullable: true, default: null})
+    @Column('varchar', {nullable: true, default: null})
     address: string;
 
-    @Column({nullable: true, default: null})
+    @Column('varchar', {nullable: true, default: null})
     name: string;
 
     @OneToOne(() => Source, (source: Source) => source.from)

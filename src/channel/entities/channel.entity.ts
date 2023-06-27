@@ -1,14 +1,17 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Via } from "src/via/entities/via.entity";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Channel {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column('varchar', { nullable: true, default: null })
     Email: string;
 
-    @Column()
+    @Column('varchar', { nullable: true, default: null })
     Web: string;
-    via: any;
+
+    @OneToOne(() => Channel, channel => channel.via)
+    via: Via;
 }

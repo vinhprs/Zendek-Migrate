@@ -10,7 +10,7 @@ export class Via {
     id: number;
     
     @OneToOne(() => Channel, (channel: Channel) => channel.via)
-    channel: string;
+    channel: Channel;
 
     @OneToOne(() => Ticket, (ticket: Ticket) => ticket.via)
     ticket: Ticket;

@@ -15,7 +15,7 @@ export class Source {
     @OneToOne(() => To, to => to.source)
     to: To;
 
-    @Column({ nullable: true, default: null })
+    @Column('varchar', { nullable: true, default: null })
     rel: string;
 
     @OneToOne(() => Via, via => via.source)
