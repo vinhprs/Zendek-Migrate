@@ -16,10 +16,16 @@ export class CustomRolesService {
 
     async migrate() 
     : Promise<any> {
-      const data = await this.api.get(this.DOMAIN, this.PATH);
-      for(const org of data.custom_roles) {
+      const data = await this.customRoles();
+      for(const org of data) {
         const request = JSON.parse(JSON.stringify({custom_role: org}));
         await this.api.post(this.DOMAIN_WOWI, this.PATH, request)
       }
+    }
+
+    async customRoles()
+    : Promise<any> {
+      const data = await this.api.get(this.DOMAIN, this.PATH);
+      return data.custom_roles;
     }
 }
