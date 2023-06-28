@@ -11,8 +11,8 @@ import { GroupsService } from '../groups/groups.service';
 import { OrganizationsService } from '../organizations/organizations.service';
 @Injectable()
 export class UsersService {
-    DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
-    DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
+    DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
+    DOMAIN_WOWI: string = `https://${process.env.NEW_DOMAIN}.zendesk.com/api/v2`;
     PATH: string = '/users'
     constructor(
         @InjectRepository(User)

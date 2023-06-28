@@ -3,8 +3,8 @@ import { Api } from '../fetch/zendesk';
 
 @Injectable()
 export class BrandService {
-  DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
-  DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
+  DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
+  DOMAIN_WOWI: string = `https://${process.env.NEW_DOMAIN}.zendesk.com/api/v2`;
   PATH: string = '/brands';
 
   constructor(
@@ -21,18 +21,18 @@ export class BrandService {
           name: org.name,
           subdomain: org.subdomain + "new"
         }}));
-        await this.api.post(this.DOMAIN_WOWI, this.PATH, request)
+        await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
       }
     }
   }
 
   async old_brands(): Promise<Array<any>> {
-    const data = await this.api.get(this.DOMAIN, this.PATH);
+    const data = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
     return data.brands;
   }
 
   async new_brands(): Promise<Array<any>> {
-    const data = await this.api.get_new(this.DOMAIN_WOWI, this.PATH);
+    const data = await this.api.get(this.DOMAIN_WOWI, this.PATH, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
     return data.brands;
   }
 }

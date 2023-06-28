@@ -61,25 +61,25 @@ export class Api {
           });
     }
 
-    async get_new(
-        domain: string,
-        path: string,
-    ): Promise<any> {
-        const axiosConfig = {
-            method: 'GET',
-            url: encodeURI(domain + path),
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            auth: {
-                username: "conaneku01@gmail.com",
-                password: "123456a@"
-            }
-        }
-        return firstValueFrom(this.httpService.request(axiosConfig))
-            .then((res) => res.data)
-            .catch((e) => {
-                console.log(e.message)
-            });
-    }
+    // async get_new(
+    //     domain: string,
+    //     path: string,
+    // ): Promise<any> {
+    //     const axiosConfig = {
+    //         method: 'GET',
+    //         url: encodeURI(domain + path),
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //         },
+    //         auth: {
+    //             username: "conaneku01@gmail.com",
+    //             password: "123456a@"
+    //         }
+    //     }
+    //     return firstValueFrom(this.httpService.request(axiosConfig))
+    //         .then((res) => res.data)
+    //         .catch((e) => {
+    //             console.log(e.message)
+    //         });
+    // }
 }

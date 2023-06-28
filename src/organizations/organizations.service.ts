@@ -6,8 +6,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class OrganizationsService {
-  DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
-  DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
+  DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
+  DOMAIN_WOWI: string = `https://${process.env.NEW_DOMAIN}.zendesk.com/api/v2`;
   PATH: string = '/organizations';
   constructor(
     private readonly api: Api,
@@ -37,7 +37,17 @@ export class OrganizationsService {
   async migrate()
   : Promise<any> {
     const data = await this.getOldOrg();
-    const request = JSON.parse(JSON.stringify({organizations: data}));
-    await this.api.post(this.DOMAIN_WOWI, this.PATH + '/create_many', request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_USERNAME);
+
+    const new_organizations = await this.getNewOrg();
+
+    const new_organization_names = new_organizations.map((organization) => organization.name);
+    let filterData = data.filter((organization) => !new_organization_names.includes(organization.name));
+
+    if (filterData.length > 0) {
+      const request = JSON.parse(JSON.stringify({organizations: data}));
+      await this.api.post(this.DOMAIN_WOWI, this.PATH + '/create_many', request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_USERNAME);
+    }
+
   }
+
 }

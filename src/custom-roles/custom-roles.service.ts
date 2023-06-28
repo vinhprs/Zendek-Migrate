@@ -7,8 +7,8 @@ import { CustomRole } from './entities/custom-role.entity';
 
 @Injectable()
 export class CustomRolesService {
-  DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
-  DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
+  DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
+  DOMAIN_WOWI: string = `https://${process.env.NEW_DOMAIN}.zendesk.com/api/v2`;
   PATH: string = '/custom_roles';
     constructor(
       private readonly api: Api,

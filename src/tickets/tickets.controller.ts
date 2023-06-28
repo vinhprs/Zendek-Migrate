@@ -5,12 +5,12 @@ import { TicketsService } from './tickets.service';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
-  @Get()
-    async syncUsers(): Promise<any> {
-      await this.ticketsService.syncTicket();
-    }
+  // @Get()
+  //   async syncUsers(): Promise<any> {
+  //     await this.ticketsService.syncTicket();
+  //   }
 
-  @Get('/migrate')
+  @Get()
     async migrate(): Promise<any> {
       await this.ticketsService.migrate();
     }

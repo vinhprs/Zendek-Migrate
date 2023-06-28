@@ -12,6 +12,9 @@ export class CustomStatus {
     status_category: string;
 
     @Column('varchar', {nullable: true, default: null})
+    agent_label: string;
+
+    @Column('varchar', {nullable: true, default: null})
     raw_agent_label: string;
 
     @Column('varchar', {nullable: true, default: null})

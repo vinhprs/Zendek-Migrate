@@ -8,8 +8,8 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class GroupsService {
-  DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
-  DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
+  DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
+  DOMAIN_WOWI: string = `https://${process.env.NEW_DOMAIN}.zendesk.com/api/v2`;
   PATH: string = '/groups'
   constructor(
     private readonly api: Api,
@@ -43,15 +43,5 @@ export class GroupsService {
       const request = JSON.parse(JSON.stringify({group: org}));
       await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD)
     }
-  }
-
-  async old_groups(): Promise<any> {
-    const data = await this.api.get(this.DOMAIN, this.PATH);
-    return data.groups;
-  }
-
-  async new_groups(): Promise<any> {
-    const data = await this.api.get_new(this.DOMAIN_WOWI, this.PATH);
-    return data.groups;
   }
 }

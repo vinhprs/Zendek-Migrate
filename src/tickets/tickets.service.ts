@@ -11,8 +11,8 @@ import { TicketFieldService } from 'src/ticket-field/ticket-field.service';
 import { log } from 'console';
 @Injectable()
 export class TicketsService {
-    DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
-    DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
+    DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
+    DOMAIN_WOWI: string = `https://${process.env.NEW_DOMAIN}.zendesk.com/api/v2`;
     PATH: string = '/tickets'
     constructor(
         @InjectRepository(Ticket)
@@ -25,22 +25,20 @@ export class TicketsService {
         private readonly ticketFieldService: TicketFieldService
     ) {}
 
-    
-
-    async syncTicket() {
-        let currentPage = await this.api.get(this.DOMAIN, this.PATH);
-        let i = 1;
-        while(currentPage.next_page) {
-            i++;
-            const tickets: Ticket[] = currentPage.tickets;
-            currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`);
-            for(const ticket of tickets) {
-                const request = JSON.parse(JSON.stringify({ticket}))
-                await this.api.post(this.DOMAIN_WOWI, this.PATH, request);
-            }
-        }
-        const users: Ticket[] = currentPage.tickets;
-    }
+    // async syncTicket() {
+    //     let currentPage = await this.api.get(this.DOMAIN, this.PATH);
+    //     let i = 1;
+    //     while(currentPage.next_page) {
+    //         i++;
+    //         const tickets: Ticket[] = currentPage.tickets;
+    //         currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`);
+    //         for(const ticket of tickets) {
+    //             const request = JSON.parse(JSON.stringify({ticket}))
+    //             await this.api.post(this.DOMAIN_WOWI, this.PATH, request);
+    //         }
+    //     }
+    //     const users: Ticket[] = currentPage.tickets;
+    // }
 
     async importAll(): Promise<any> {
         await this.brandService.migrate();
@@ -72,22 +70,22 @@ export class TicketsService {
 
     async migrate(): Promise<any> {
         await this.importAll();
-        let currentPage = await this.api.get(this.DOMAIN, this.PATH);
+        let currentPage = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
         let i = 0;
         const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
         while(currentPage.next_page) {
             i++;
             const data: Ticket[] = currentPage.tickets;
-            currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`);
+            currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
             
             const old_brands: any[] = await this.brandService.old_brands();
             const new_brands: any[] = await this.brandService.new_brands();
 
-            const old_groups: any[] = await this.groupService.old_groups();
-            const new_groups: any[] = await this.groupService.new_groups();
+            const old_groups: any[] = await this.groupService.getOldGroups();
+            const new_groups: any[] = await this.groupService.getNewGroups();
 
-            const old_organizations: any[] = await this.organizationService.old_organizations();
-            const new_organizations: any[] = await this.organizationService.new_organizations();
+            const old_organizations: any[] = await this.organizationService.getOldOrg();
+            const new_organizations: any[] = await this.organizationService.getNewOrg();
 
             const old_custom_statuses: any[] = await this.customStatusService.old_custom_statuses();
             const new_custom_statuses: any[] = await this.customStatusService.new_custom_statuses();
@@ -135,7 +133,7 @@ export class TicketsService {
                 const request = JSON.parse(JSON.stringify({chunk})).chunk;
                 await this.api.post(this.DOMAIN_WOWI, '/imports/tickets/create_many', {
                     "tickets": request
-                });
+                }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
 
                 await delay(7000);
             }
