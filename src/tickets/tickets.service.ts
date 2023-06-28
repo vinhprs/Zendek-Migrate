@@ -121,6 +121,7 @@ export class TicketsService {
                 }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
 
                 await delay(7000);
+                break;
             }
             break;
         }

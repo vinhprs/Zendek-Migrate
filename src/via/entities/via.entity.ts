@@ -14,6 +14,11 @@ export class Via {
     @ManyToMany(() => Ticket, (ticket: Ticket) => ticket.via)
     ticket: Ticket;
 
-    @ManyToMany(() => Source, (source: Source) => source.via)
+    @ManyToMany(() => Source, (source: Source) => source.via, {
+        cascade: [
+            'insert',
+            'update',
+        ]
+    })
     source: Source;
 }

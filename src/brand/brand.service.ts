@@ -40,7 +40,6 @@ export class BrandService {
 
   async new_brands(): Promise<Array<any>> {
     const data = await this.api.get(this.DOMAIN_WOWI, this.PATH, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
-    console.log(data);
     return data.brands;
   }
 }
