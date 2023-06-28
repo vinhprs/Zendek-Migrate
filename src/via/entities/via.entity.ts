@@ -1,7 +1,6 @@
-import { Channel } from "src/channel/entities/channel.entity";
 import { Source } from "src/source/entities/source.entity";
 import { Ticket } from "src/tickets/ticket.entity";
-import { Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Via {
@@ -9,11 +8,11 @@ export class Via {
     @PrimaryGeneratedColumn()
     id: number;
     
-    @OneToOne(() => Channel, (channel: Channel) => channel.via)
-    channel: Channel;
+    @Column('varchar', {nullable: true, default: null})
+    channel: string;
 
-    @OneToOne(() => Ticket, (ticket: Ticket) => ticket.via)
-    ticket: Ticket;
+    // @OneToOne(() => Ticket, (ticket: Ticket) => ticket.via)
+    // ticket: Ticket;
 
     @OneToOne(() => Source, (source: Source) => source.via)
     source: Source;

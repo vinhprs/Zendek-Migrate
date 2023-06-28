@@ -7,6 +7,11 @@ export class TicketsController {
 
   @Get()
     async syncUsers(): Promise<any> {
-        await this.ticketsService.syncTicket();
+      await this.ticketsService.syncTicket();
+    }
+
+  @Get('/migrate')
+    async migrate(): Promise<any> {
+      await this.ticketsService.migrate();
     }
 }

@@ -48,9 +48,34 @@ export class Api {
             data
         }
         return firstValueFrom(this.httpService.request(axiosConfig))
-          .then((res) => res.data)
+          .then((res) => {
+            console.log(res.data);
+            return res.data;
+          })
           .catch((e) => {
               console.log(e.message, axiosConfig.data)
           });
+    }
+
+    async get_new(
+        domain: string,
+        path: string,
+    ): Promise<any> {
+        const axiosConfig = {
+            method: 'GET',
+            url: encodeURI(domain + path),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            auth: {
+                username: "conaneku01@gmail.com",
+                password: "123456a@"
+            }
+        }
+        return firstValueFrom(this.httpService.request(axiosConfig))
+            .then((res) => res.data)
+            .catch((e) => {
+                console.log(e.message)
+            });
     }
 }

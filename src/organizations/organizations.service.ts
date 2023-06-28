@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { Api } from '../fetch/zendesk';
 import { Repository } from 'typeorm';
 import { Organization } from './entities/organization.entity';
@@ -28,7 +26,26 @@ export class OrganizationsService {
   async migrate()
   : Promise<any> {
     const data = await this.organizationRepository.find({});
-    const request = JSON.parse(JSON.stringify({organizations: data}));
-    await this.api.post(this.DOMAIN_WOWI, this.PATH + '/create_many', request);
+    const new_organizations = await this.new_organizations();
+
+    const new_organization_names = new_organizations.map((organization) => organization.name);
+    let filterData = data.filter((organization) => !new_organization_names.includes(organization.name));
+
+    if (filterData.length > 0) {
+      const request = JSON.parse(JSON.stringify({organizations: filterData}));
+      await this.api.post(this.DOMAIN_WOWI, this.PATH + '/create_many', request);
+    }
+
   }
+
+  async old_organizations(): Promise<any> {
+    const data = await this.api.get(this.DOMAIN, this.PATH);
+    return data.organizations;
+  }
+
+  async new_organizations(): Promise<any> {
+    const data = await this.api.get_new(this.DOMAIN_WOWI, this.PATH);
+    return data.organizations;
+  }
+
 }

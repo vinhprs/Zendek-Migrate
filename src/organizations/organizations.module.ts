@@ -12,6 +12,7 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule
   ],
   controllers: [OrganizationsController],
-  providers: [OrganizationsService, Api]
+  providers: [OrganizationsService, Api],
+  exports: [OrganizationsService]
 })
 export class OrganizationsModule {}

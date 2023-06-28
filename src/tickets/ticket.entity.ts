@@ -1,6 +1,7 @@
+import { CustomField } from "src/custom-field/entities/custom-field.entity";
 import { Field } from "src/field/entities/field.entity";
 import { Via } from "src/via/entities/via.entity";
-import { Column, Entity, OneToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryColumn } from "typeorm";
 
 @Entity()
 export class Ticket {
@@ -13,11 +14,11 @@ export class Ticket {
     @Column('varchar', {nullable: true, default: null})
     url: string;
 
-    @OneToOne(() => Via, via => via.ticket)
-    via: Via;
+    // @ManyToOne(() => Via, via => via.ticket)
+    // via: Via;
 
-    @Column('varchar', {nullable: true, default: null})
-    email: string;
+    // @Column('varchar', {nullable: true, default: null})
+    // via: Via;
 
     @Column('timestamp', {nullable: true, default: null})
     created_at: Date;
@@ -76,10 +77,10 @@ export class Ticket {
     @Column('bigint', {nullable: true, default: null})
     problem_id: number;
 
-    @Column('boolean', {nullable: true, default: null})
+    @Column('boolean', {nullable: true, default: false})
     has_incidents: boolean;
 
-    @Column('boolean', {nullable: true, default: null})
+    @Column('boolean', {nullable: true, default: true})
     is_public: boolean;
 
     @Column('timestamp', {nullable: true, default: null})
@@ -88,8 +89,13 @@ export class Ticket {
     @Column('varchar', {nullable: true, default: null, array: true})
     tags: string[];
 
-    @OneToOne(() => Field, custom_fields => custom_fields.ticket)
-    custom_fields: Field;
+    @ManyToMany(() => CustomField, custom_fields => custom_fields.ticket, {
+        cascade: [
+            'insert',
+            'update',
+        ]
+    })
+    custom_fields: CustomField[];
 
     @Column('bigint', {nullable: true, default: null})
     satisfaction_rating: number;
@@ -100,8 +106,13 @@ export class Ticket {
     @Column('bigint', {nullable: true, default: null})
     custom_status_id: number;
 
-    @OneToOne(() => Field, fields => fields.ticket)
-    fields: Field;
+    @ManyToMany(() => Field, fields => fields.ticket, {
+        cascade: [
+            'insert',
+            'update',
+        ]
+    })
+    fields: Field[];
 
     @Column('bigint', {nullable: true, default: null, array: true})
     followup_ids: number[];
@@ -120,5 +131,4 @@ export class Ticket {
 
     @Column('bigint', {nullable: true, default: null})
     generated_timestamp: number;
-
 }

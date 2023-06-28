@@ -28,9 +28,28 @@ export class GroupsService {
   async migrate() 
   : Promise<any> {
     const data = await this.groupsRepository.find({});
-    for(const org of data ) {
-      const request = JSON.parse(JSON.stringify({group: org}));
-      await this.api.post(this.DOMAIN_WOWI, this.PATH, request)
+    const new_groups = await this.new_groups();
+    const new_group_names = new_groups.map((group) => group.name);
+
+    for(const group of data) {
+
+      if (!new_group_names.includes(group.name)) {
+        const request = JSON.parse(JSON.stringify({group: {
+          name: group.name,
+        }}));
+        await this.api.post(this.DOMAIN_WOWI, this.PATH, request)
+      }
+
     }
+  }
+
+  async old_groups(): Promise<any> {
+    const data = await this.api.get(this.DOMAIN, this.PATH);
+    return data.groups;
+  }
+
+  async new_groups(): Promise<any> {
+    const data = await this.api.get_new(this.DOMAIN_WOWI, this.PATH);
+    return data.groups;
   }
 }

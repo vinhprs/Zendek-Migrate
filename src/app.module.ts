@@ -28,6 +28,12 @@ import { Locale } from './locales/entities/locale.entity';
 import { GroupsModule } from './groups/groups.module';
 import { Groups } from './groups/entities/group.entity';
 import { CustomRolesModule } from './custom-roles/custom-roles.module';
+import { CustomFieldModule } from './custom-field/custom-field.module';
+import { CustomField } from './custom-field/entities/custom-field.entity';
+import { BrandModule } from './brand/brand.module';
+import { CustomStatusModule } from './custom-status/custom-status.module';
+import { CustomStatus } from './custom-status/entities/custom-status.entity';
+import { TicketFieldModule } from './ticket-field/ticket-field.module';
 
 @Module({
   imports: [
@@ -53,7 +59,9 @@ import { CustomRolesModule } from './custom-roles/custom-roles.module';
         From,
         To,
         Locale,
-        Groups
+        Groups,
+        CustomField,
+        CustomStatus
       ],
       synchronize: true,
     }),
@@ -69,7 +77,11 @@ import { CustomRolesModule } from './custom-roles/custom-roles.module';
     ToModule,
     LocalesModule,
     GroupsModule,
-    CustomRolesModule
+    CustomRolesModule,
+    CustomFieldModule,
+    BrandModule,
+    CustomStatusModule,
+    TicketFieldModule,
   ],
   controllers: [AppController],
   providers: [AppService],
