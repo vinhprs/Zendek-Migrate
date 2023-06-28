@@ -22,14 +22,10 @@ export class BrandService {
 
       const request = JSON.parse(JSON.stringify({brand: {
         name: org.name,
-        subdomain: process.env.NEW_DOMAIN + "." + org.name,
+        subdomain: process.env.NEW_DOMAIN + process.env.OLD_DOMAIN,
       }}));
 
-      let res = await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
-      if (res.error) {
-        console.log(res.error);
-      }
-    
+      await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);    
     }
   }
 

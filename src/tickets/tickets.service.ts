@@ -40,11 +40,16 @@ export class TicketsService {
     }
 
     async getComments(ticketId: string): Promise<any> {
-        return await this.api.get(this.DOMAIN, this.PATH + `/${ticketId}/comments`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
+        try {
+            return await this.api.get(this.DOMAIN, this.PATH + `/${ticketId}/comments`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
+        } catch (e) {
+            log("Error getting comments", e);
+            return {};
+        }
     }
 
     splitTicket(tickets: Ticket[]): Ticket[][] {
-        const chunkSize = 20;
+        const chunkSize = 100;
         const totalChunks = Math.ceil(tickets.length / chunkSize);
         const chunks: Ticket[][] = [];
 
@@ -59,16 +64,18 @@ export class TicketsService {
 
     async migrate(): Promise<any> {
         await this.importAll();
+        // return "true";
         let currentPage = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
         let i = 0;
         const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
         while(currentPage.next_page) {
             i++;
-            const data: Ticket[] = currentPage.tickets;
+            // const data: Ticket[] = currentPage.tickets;
+            const data: any[] = currentPage.tickets;
             currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
             
-            const old_brands: any[] = await this.brandService.old_brands();
-            const new_brands: any[] = await this.brandService.new_brands();
+            // const old_brands: any[] = await this.brandService.old_brands();
+            // const new_brands: any[] = await this.brandService.new_brands();
 
             const old_groups: any[] = await this.groupService.getOldGroups();
             const new_groups: any[] = await this.groupService.getNewGroups();
@@ -82,11 +89,11 @@ export class TicketsService {
             const old_ticket_fields: any[] = await this.ticketFieldService.old_ticket_fields();
             const new_ticket_fields: any[] = await this.ticketFieldService.new_ticket_fields();
 
-            for(const ticket of data) {
+            for(var ticket of data) {
                 if (ticket.brand_id) {
-                    const old_brand = old_brands.find(brand => brand.id === ticket.brand_id);
-                    const new_brand = new_brands.find(brand => brand.name == old_brand.name);
-                    ticket.brand_id = new_brand.id;
+                    // const old_brand = old_brands.find(brand => brand.id === ticket.brand_id);
+                    // const new_brand = new_brands.find(brand => brand.name == old_brand.name);
+                    ticket.brand_id = 11490025455513;
                 }
 
                 if (ticket.group_id) {
@@ -124,6 +131,14 @@ export class TicketsService {
                 }));
                 ticket.comments = comments;
 
+                // console.log(ticket);
+
+                // const request = JSON.parse(JSON.stringify({ticket})).ticket;
+                // await this.api.post(this.DOMAIN_WOWI, this.PATH, {
+                //     "ticket": request
+                // }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+
+                // break;
             }
 
             let chunks: Ticket[][] = this.splitTicket(data); // split tickets into chunks of 50
@@ -134,26 +149,10 @@ export class TicketsService {
                     "tickets": request
                 }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
 
-                // log(request);
-                // try {
-                //     await axios({
-                //         method: 'post',
-                //         headers: {
-                //             'Content-Type': 'application/json',
-                //         },        
-                //         url: `https://discord.com/api/webhooks/1123515476295811152/5v_RD4c9vnX6F4SPqr9_YBgVnX3cHpsLL09uiwMVpCEja0cJZdNxpFqSiLrCHeSlXh26`,
-                //         data: JSON.stringify({
-                //             content: JSON.stringify(request)
-                //         })
-                //     })
-                // } catch (error) {
-                //     console.log(error.message);
-                // }
-
                 await delay(7000);
-                break;
+                // break;
             }
-            break;
+            // break;
         }
     }
 
