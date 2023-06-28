@@ -19,18 +19,29 @@ export class GroupsService {
 
   async syncGroups()
   : Promise<Groups[]> {
-    const data = await this.api.get(this.DOMAIN, this.PATH);
+    const data = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_USERNAME);
     const groups = data.groups;
 
     return await this.groupsRepository.save(groups);
   }
 
+  async getOldGroups()
+  : Promise<Groups[]> {
+    return await this.groupsRepository.find({});
+  }
+
+  async getNewGroups()
+  : Promise<Groups[]> {
+    const data = await this.api.get(this.DOMAIN_WOWI, this.PATH, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+    return data.groups;
+  }
+
   async migrate() 
   : Promise<any> {
-    const data = await this.groupsRepository.find({});
+    const data = await this.getOldGroups();
     for(const org of data ) {
       const request = JSON.parse(JSON.stringify({group: org}));
-      await this.api.post(this.DOMAIN_WOWI, this.PATH, request)
+      await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD)
     }
   }
 }

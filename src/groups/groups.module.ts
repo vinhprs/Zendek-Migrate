@@ -12,6 +12,7 @@ import { Api } from '../fetch/zendesk';
     HttpModule
   ],
   controllers: [GroupsController],
-  providers: [GroupsService, Api]
+  providers: [GroupsService, Api],
+  exports: [GroupsService]
 })
 export class GroupsModule {}
