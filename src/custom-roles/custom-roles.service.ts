@@ -19,13 +19,13 @@ export class CustomRolesService {
       const data = await this.customRoles();
       for(const org of data) {
         const request = JSON.parse(JSON.stringify({custom_role: org}));
-        await this.api.post(this.DOMAIN_WOWI, this.PATH, request)
+        await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD)
       }
     }
 
     async customRoles()
     : Promise<any> {
-      const data = await this.api.get(this.DOMAIN, this.PATH);
+      const data = await this.api.get(this.DOMAIN_WOWI, this.PATH, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
       return data.custom_roles;
     }
 }

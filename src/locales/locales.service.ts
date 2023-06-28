@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class LocalesService {
   DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
+  DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
   PATH: string = '/locales';
   constructor(
     private readonly api: Api,
@@ -18,9 +19,24 @@ export class LocalesService {
 
   async syncLocales()
   : Promise<Locale[]> {
-    const data = await this.api.get(this.DOMAIN, this.PATH);
+    const data = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
     const locales= data.locales;
 
     return await this.localeRepository.save(locales);
   }
+
+  async getOldLacales()
+  : Promise<Locale[]> {
+    return await this.localeRepository.find({});
+  }
+
+  async migrate()
+  : Promise<any> {
+    const data = await this.getOldLacales();
+    for(const org of data ) {
+      const request = JSON.parse(JSON.stringify({group: org}));
+      await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD)
+    }
+  }
+
 }

@@ -11,6 +11,8 @@ export class Api {
     async get(
         domain: string,
         path: string,
+        username: string,
+        password: string
     ): Promise<any> {
         const axiosConfig = {
             method: 'GET',
@@ -19,8 +21,8 @@ export class Api {
                 'Content-Type': 'application/json',
             },
             auth: {
-                username: "emi-support@suzumlm.com",
-                password: "Suzu2023mlm$"
+                username,
+                password
             }
         }
         return firstValueFrom(this.httpService.request(axiosConfig))
@@ -33,7 +35,9 @@ export class Api {
     async post(
       domain: string,
       path: string,
-      data: any
+      data: any,
+      username: string,
+      password: string
     ) : Promise<any> {
         const axiosConfig = {
             method: 'POST',
@@ -42,8 +46,8 @@ export class Api {
                 'Content-Type': 'application/json',
             },
             auth: {
-                username: "conaneku01@gmail.com",
-                password: "123456a@"
+                username,
+                password
             },
             data
         }

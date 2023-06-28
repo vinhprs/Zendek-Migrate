@@ -14,4 +14,10 @@ export class LocalesController {
     return this.localesService.syncLocales();
   }
 
+  @Get('/migrate')
+  async migrate()
+  : Promise<Locale[]> {
+    return this.localesService.migrate();
+  }
+
 }
