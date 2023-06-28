@@ -9,6 +9,7 @@ import { OrganizationsService } from 'src/organizations/organizations.service';
 import { CustomStatusService } from 'src/custom-status/custom-status.service';
 import { TicketFieldService } from 'src/ticket-field/ticket-field.service';
 import { log } from 'console';
+import axios from 'axios';
 @Injectable()
 export class TicketsService {
     DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
@@ -38,8 +39,12 @@ export class TicketsService {
         log('Imported ticket field');
     }
 
+    async getComments(ticketId: string): Promise<any> {
+        return await this.api.get(this.DOMAIN, this.PATH + `/${ticketId}/comments`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
+    }
+
     splitTicket(tickets: Ticket[]): Ticket[][] {
-        const chunkSize = 50;
+        const chunkSize = 20;
         const totalChunks = Math.ceil(tickets.length / chunkSize);
         const chunks: Ticket[][] = [];
 
@@ -49,7 +54,6 @@ export class TicketsService {
             const chunk = tickets.slice(start, end);
             chunks.push(chunk);
         }
-
         return chunks;
     }
 
@@ -110,6 +114,16 @@ export class TicketsService {
                         ticket_field.id = new_ticket_field.id;
                     }
                 }
+
+                // get ticket comments
+                let comments: any = await this.getComments(ticket.id.toString());
+                comments = (comments.comments as Array<any>).map(comment => ({
+                    author_id: comment.author_id,
+                    created_at: comment.created_at,
+                    value: comment.body
+                }));
+                ticket.comments = comments;
+
             }
 
             let chunks: Ticket[][] = this.splitTicket(data); // split tickets into chunks of 50
@@ -119,6 +133,22 @@ export class TicketsService {
                 await this.api.post(this.DOMAIN_WOWI, '/imports/tickets/create_many', {
                     "tickets": request
                 }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+
+                // log(request);
+                // try {
+                //     await axios({
+                //         method: 'post',
+                //         headers: {
+                //             'Content-Type': 'application/json',
+                //         },        
+                //         url: `https://discord.com/api/webhooks/1123515476295811152/5v_RD4c9vnX6F4SPqr9_YBgVnX3cHpsLL09uiwMVpCEja0cJZdNxpFqSiLrCHeSlXh26`,
+                //         data: JSON.stringify({
+                //             content: JSON.stringify(request)
+                //         })
+                //     })
+                // } catch (error) {
+                //     console.log(error.message);
+                // }
 
                 await delay(7000);
                 break;

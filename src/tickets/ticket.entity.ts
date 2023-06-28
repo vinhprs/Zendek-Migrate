@@ -128,4 +128,8 @@ export class Ticket {
 
     @Column('bigint', {nullable: true, default: null})
     generated_timestamp: number;
+
+    @Column({nullable: true, default: null, type: 'jsonb'})
+    comments: object[];
+
 }
