@@ -14,11 +14,8 @@ export class Ticket {
     @Column('varchar', {nullable: true, default: null})
     url: string;
 
-    // @ManyToOne(() => Via, via => via.ticket)
-    // via: Via;
-
-    // @Column('varchar', {nullable: true, default: null})
-    // via: Via;
+    @ManyToMany(() => Via, via => via.ticket)
+    via: Via;
 
     @Column('timestamp', {nullable: true, default: null})
     created_at: Date;

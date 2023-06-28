@@ -42,10 +42,14 @@ export class OrganizationsService {
 
     const new_organization_names = new_organizations.map((organization) => organization.name);
     let filterData = data.filter((organization) => !new_organization_names.includes(organization.name));
+    let filterName = filterData.map((organization) => ({name: organization.name}));
 
-    if (filterData.length > 0) {
-      const request = JSON.parse(JSON.stringify({organizations: data}));
-      await this.api.post(this.DOMAIN_WOWI, this.PATH + '/create_many', request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_USERNAME);
+    if (filterName.length > 0) {
+      
+      for (const org of filterName) {
+        const request = JSON.parse(JSON.stringify({organization: org}));
+        await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+      }
     }
 
   }

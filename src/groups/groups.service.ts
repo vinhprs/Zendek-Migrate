@@ -39,7 +39,12 @@ export class GroupsService {
   async migrate() 
   : Promise<any> {
     const data = await this.getOldGroups();
-    for(const org of data ) {
+    const new_groups = await this.getNewGroups();
+
+    const new_group_names = new_groups.map((group) => group.name);
+    for(const org of data) {
+      if (new_group_names.includes(org.name)) continue;
+
       const request = JSON.parse(JSON.stringify({group: org}));
       await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD)
     }
