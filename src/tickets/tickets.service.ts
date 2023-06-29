@@ -215,7 +215,8 @@ export class TicketsService {
                 let comments: any = await this.getComments(ticket.id.toString());
                 comments = (comments.comments as Array<any>).map(async (comment) =>
                     {
-                        let newAuthorId = (await this.userService.searchNewUser(comment.author_id)).id;
+                        const old_author = await this.userService.getOldUser(comment.author_id);
+                        let newAuthorId = (await this.userService.searchNewUser(old_author.email)).id;
                         return ({
                             author_id: newAuthorId,
                             created_at: comment.created_at,
@@ -227,12 +228,12 @@ export class TicketsService {
                 // console.log(ticket);
                 // writeFileSync(join(__dirname, '..', '..','logs', `${ticket.id}.json`), JSON.stringify(ticket));
 
-                const request = JSON.parse(JSON.stringify({ticket})).ticket;
-                let res = await this.api.post(this.DOMAIN_WOWI, '/imports/tickets', {
-                    "ticket": request
-                }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+                // const request = JSON.parse(JSON.stringify({ticket})).ticket;
+                // let res = await this.api.post(this.DOMAIN_WOWI, '/imports/tickets', {
+                //     "ticket": request
+                // }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
 
-                break;
+                // break;
 
                 // if (res) {
                 //     writeFileSync(join(__dirname, '..', '..', 'logs', `${ticket.id}_new.json`), JSON.stringify(res));
@@ -241,7 +242,7 @@ export class TicketsService {
                 // break;
             }
 
-            return;
+            // return;
 
             let chunks: Ticket[][] = this.splitTicket(data); // split tickets into chunks of 50
 
