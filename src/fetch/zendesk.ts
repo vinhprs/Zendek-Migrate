@@ -53,11 +53,11 @@ export class Api {
         }
         return firstValueFrom(this.httpService.request(axiosConfig))
           .then((res) => {
-            console.log(res.data);
             return res.data;
           })
           .catch((e) => {
-              console.log(e.message, axiosConfig.data)
+              console.log(e.message, axiosConfig.data);
+              return e;
           });
     }
 

@@ -9,6 +9,8 @@ import { OrganizationsService } from 'src/organizations/organizations.service';
 import { CustomStatusService } from 'src/custom-status/custom-status.service';
 import { TicketFieldService } from 'src/ticket-field/ticket-field.service';
 import { log } from 'console';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 import axios from 'axios';
 @Injectable()
 export class TicketsService {
@@ -26,6 +28,11 @@ export class TicketsService {
         private readonly ticketFieldService: TicketFieldService
     ) {}
 
+    /**
+     * Imports all data from various services. Everything else must be imported before tickets can be imported.
+     *
+     * @return {Promise<any>} - A promise that resolves when all data is imported.
+     */
     async importAll(): Promise<any> {
         await this.brandService.migrate();
         log('Imported brand');
@@ -122,6 +129,8 @@ export class TicketsService {
                     }
                 }
 
+                // delete ticket.url;
+
                 // get ticket comments
                 let comments: any = await this.getComments(ticket.id.toString());
                 comments = (comments.comments as Array<any>).map(comment => ({
@@ -132,14 +141,21 @@ export class TicketsService {
                 ticket.comments = comments;
 
                 // console.log(ticket);
+                // writeFileSync(join(__dirname, '..', '..','logs', `${ticket.id}.json`), JSON.stringify(ticket));
 
-                // const request = JSON.parse(JSON.stringify({ticket})).ticket;
-                // await this.api.post(this.DOMAIN_WOWI, this.PATH, {
-                //     "ticket": request
-                // }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+                const request = JSON.parse(JSON.stringify({ticket})).ticket;
+                let res = await this.api.post(this.DOMAIN_WOWI, '/imports/tickets', {
+                    "ticket": request
+                }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
 
+                // if (res) {
+                //     writeFileSync(join(__dirname, '..', '..', 'logs', `${ticket.id}_new.json`), JSON.stringify(res));
+                // }
+                // console.log(JSON.stringify(res));
                 // break;
             }
+
+            // return;
 
             let chunks: Ticket[][] = this.splitTicket(data); // split tickets into chunks of 50
 
