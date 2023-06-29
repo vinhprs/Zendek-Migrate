@@ -10,6 +10,7 @@ import { CustomStatusModule } from 'src/custom-status/custom-status.module';
 import { GroupsModule } from 'src/groups/groups.module';
 import { OrganizationsModule } from 'src/organizations/organizations.module';
 import { TicketFieldModule } from 'src/ticket-field/ticket-field.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { TicketFieldModule } from 'src/ticket-field/ticket-field.module';
     CustomStatusModule,
     GroupsModule,
     OrganizationsModule,
-    TicketFieldModule
+    TicketFieldModule,
+    UsersModule
   ],
   controllers: [TicketsController],
   providers: [TicketsService, Api],

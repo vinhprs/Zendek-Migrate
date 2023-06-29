@@ -9,9 +9,7 @@ import { OrganizationsService } from 'src/organizations/organizations.service';
 import { CustomStatusService } from 'src/custom-status/custom-status.service';
 import { TicketFieldService } from 'src/ticket-field/ticket-field.service';
 import { log } from 'console';
-import { writeFileSync } from 'fs';
-import { join } from 'path';
-import axios from 'axios';
+import { UsersService } from 'src/users/users.service';
 @Injectable()
 export class TicketsService {
     DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
@@ -25,7 +23,8 @@ export class TicketsService {
         private readonly groupService: GroupsService,
         private readonly organizationService: OrganizationsService,
         private readonly customStatusService: CustomStatusService,
-        private readonly ticketFieldService: TicketFieldService
+        private readonly ticketFieldService: TicketFieldService,
+        private readonly userService: UsersService
     ) {}
 
     /**
@@ -69,6 +68,14 @@ export class TicketsService {
         return chunks;
     }
 
+    replaceObjectId(ticket: Ticket, old_content: string, new_content: string): Ticket {
+        let StrTicket: string = JSON.stringify(ticket);
+        StrTicket = StrTicket.replace(old_content, new_content);
+        ticket = JSON.parse(StrTicket);
+
+        return ticket;
+    }
+
     async migrate(): Promise<any> {
         await this.importAll();
         // return "true";
@@ -97,6 +104,9 @@ export class TicketsService {
             const new_ticket_fields: any[] = await this.ticketFieldService.new_ticket_fields();
 
             for(var ticket of data) {
+
+                const new_Ids: Array<number> = [];
+
                 if (ticket.brand_id) {
                     // const old_brand = old_brands.find(brand => brand.id === ticket.brand_id);
                     // const new_brand = new_brands.find(brand => brand.name == old_brand.name);
@@ -129,15 +139,89 @@ export class TicketsService {
                     }
                 }
 
-                // delete ticket.url;
+                if (ticket.requester_id && !new_Ids.includes(ticket.requester_id)) {
+                    const old_requester = await this.userService.getOldUser(ticket.requester_id);
+                    const new_requester = await this.userService.searchNewUser(old_requester.email);
+
+                    ticket = this.replaceObjectId(ticket, old_requester.id.toString(), new_requester.id.toString());
+
+                    new_Ids.push(ticket.requester_id);
+                }
+
+                if (ticket.submitter_id && !new_Ids.includes(ticket.submitter_id)) {
+                    const old_submitter = await this.userService.getOldUser(ticket.submitter_id);
+                    const new_submitter = await this.userService.searchNewUser(old_submitter.email);
+
+                    ticket = this.replaceObjectId(ticket, old_submitter.id.toString(), new_submitter.id.toString());
+
+                    new_Ids.push(ticket.submitter_id);
+                }
+
+                if (ticket.assignee_id && !new_Ids.includes(ticket.assignee_id)) {
+                    const old_assignee = await this.userService.getOldUser(ticket.assignee_id);
+                    const new_assignee = await this.userService.searchNewUser(old_assignee.email);
+
+                    ticket = this.replaceObjectId(ticket, old_assignee.id.toString(), new_assignee.id.toString());
+
+                    new_Ids.push(ticket.assignee_id);
+                }
+
+                if (ticket.collaborator_ids.length > 0) {
+                    for (const collaborator_id of ticket.collaborator_ids) {
+                        if (new_Ids.includes(collaborator_id)) return;
+                        const old_collaborator = await this.userService.getOldUser(collaborator_id);
+                        const new_collaborator = await this.userService.searchNewUser(old_collaborator.email);
+
+                        ticket = this.replaceObjectId(ticket, old_collaborator.id.toString(), new_collaborator.id.toString());
+
+                        new_Ids.push(ticket.collaborator_id);
+                    }
+                }
+
+                if (ticket.follower_ids.length > 0) {
+                    for (const follower_id of ticket.follower_ids) {
+                        if (new_Ids.includes(follower_id)) return;
+                        const old_follower = await this.userService.getOldUser(follower_id);
+                        const new_follower = await this.userService.searchNewUser(old_follower.email);
+
+                        ticket = this.replaceObjectId(ticket, old_follower.id.toString(), new_follower.id.toString());
+
+                        new_Ids.push(ticket.follower_id);
+                    }
+                }
+
+                if (ticket.email_cc_ids.length > 0) {
+                    for (const email_cc_id of ticket.email_cc_ids) {
+                        if (new_Ids.includes(email_cc_id)) return;
+                        const old_email_cc = await this.userService.getOldUser(email_cc_id);
+                        const new_email_cc = await this.userService.searchNewUser(old_email_cc.email);
+
+                        ticket = this.replaceObjectId(ticket, old_email_cc.id.toString(), new_email_cc.id.toString());
+
+                        new_Ids.push(ticket.email_cc_id);
+                }}
+
+                // if (ticket.comments.length > 0) {
+                //     for (const comment of ticket.comments) {
+                //         if (new_Ids.includes(comment.author_id)) return;
+                //         const old_comment = await this.userService.getOldUser(comment.author_id);
+                //         const new_comment = await this.userService.searchNewUser(old_comment.email);
+
+                //         ticket = this.replaceObjectId(ticket, old_comment.id.toString(), new_comment.id.toString());
+                //     }
+                // }
 
                 // get ticket comments
                 let comments: any = await this.getComments(ticket.id.toString());
-                comments = (comments.comments as Array<any>).map(comment => ({
-                    author_id: comment.author_id,
-                    created_at: comment.created_at,
-                    value: comment.body
-                }));
+                comments = (comments.comments as Array<any>).map(async (comment) =>
+                    {
+                        let newAuthorId = (await this.userService.searchNewUser(comment.author_id)).id;
+                        return ({
+                            author_id: newAuthorId,
+                            created_at: comment.created_at,
+                            value: comment.body
+                        })
+                    });
                 ticket.comments = comments;
 
                 // console.log(ticket);
@@ -148,6 +232,8 @@ export class TicketsService {
                     "ticket": request
                 }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
 
+                break;
+
                 // if (res) {
                 //     writeFileSync(join(__dirname, '..', '..', 'logs', `${ticket.id}_new.json`), JSON.stringify(res));
                 // }
@@ -155,7 +241,7 @@ export class TicketsService {
                 // break;
             }
 
-            // return;
+            return;
 
             let chunks: Ticket[][] = this.splitTicket(data); // split tickets into chunks of 50
 

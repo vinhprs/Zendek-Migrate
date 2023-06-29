@@ -71,4 +71,32 @@ export class UsersService {
             await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
         }
     }
+
+    async getOldUser(Id: string): Promise<User> {
+        try {
+            let res = await this.api.get(this.DOMAIN, this.PATH + `/${Id}`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
+            return res.user as User;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async getNewUser(Id: string): Promise<User> {
+        try {
+            let res = await this.api.get(this.DOMAIN_WOWI, this.PATH + `/${Id}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+            return res.user as User;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async searchNewUser(query: string): Promise<User> {
+        try {
+            let res = await this.api.get(this.DOMAIN, this.PATH + `?query=${query}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+            return res.users[0] as User;
+        } catch (e) {
+            return null;
+        }
+    }
+
 }
