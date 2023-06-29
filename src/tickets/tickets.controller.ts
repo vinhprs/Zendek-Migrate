@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 
 @Controller('tickets')
@@ -13,5 +13,13 @@ export class TicketsController {
   @Get()
     async migrate(): Promise<any> {
       await this.ticketsService.migrate();
+    }
+
+  @Get('purge')
+    async purge(@Query('ids') ids: number[] = null): Promise<any> {
+      if (ids) {
+        return await this.ticketsService.purge(ids);
+      }
+      return await this.ticketsService.purge();
     }
 }

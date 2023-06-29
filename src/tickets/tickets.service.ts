@@ -10,6 +10,8 @@ import { CustomStatusService } from 'src/custom-status/custom-status.service';
 import { TicketFieldService } from 'src/ticket-field/ticket-field.service';
 import { log } from 'console';
 import { UsersService } from 'src/users/users.service';
+import { appendFileSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 @Injectable()
 export class TicketsService {
     DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
@@ -68,6 +70,21 @@ export class TicketsService {
         return chunks;
     }
 
+    splitIds(ids: string[]): string[][] {
+        const chunkSize = 100;
+        const totalChunks = Math.ceil(ids.length / chunkSize);
+        const chunks: string[][] = [];
+
+        for (let i = 0; i < totalChunks; i++) {
+            const start = i * chunkSize;
+            const end = start + chunkSize;
+            const chunk = ids.slice(start, end);
+            chunks.push(chunk);
+        }
+
+        return chunks;
+    }
+
     replaceObjectId(ticket: Ticket, old_content: string, new_content: string): Ticket {
         let StrTicket: string = JSON.stringify(ticket);
         StrTicket = StrTicket.replace(old_content, new_content);
@@ -81,7 +98,7 @@ export class TicketsService {
         // return "true";
         let currentPage = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
         let i = 0;
-        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
         while(currentPage.next_page) {
             i++;
             // const data: Ticket[] = currentPage.tickets;
@@ -248,15 +265,53 @@ export class TicketsService {
 
             for (const chunk of chunks) {
                 const request = JSON.parse(JSON.stringify({chunk})).chunk;
-                await this.api.post(this.DOMAIN_WOWI, '/imports/tickets/create_many', {
+                let res = await this.api.post(this.DOMAIN_WOWI, '/imports/tickets/create_many', {
                     "tickets": request
                 }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
 
+                while(!res.results) {
+                    await delay(3000);
+                    res = await this.api.get(this.DOMAIN_WOWI, '/imports/tickets', process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+                }
+
+                if (res.results?.length > 0) {
+                    let Ids: string = '';
+
+                    for (const ticket of res.results) {
+                        Ids += ticket.id + '\n';
+                    }
+
+                    appendFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket.txt'), Ids);
+
+                }
+
                 await delay(7000);
-                // break;
             }
-            // break;
         }
     }
+    async purge(ids: number[] = null) {
+        if (ids) {
+            try {
+                let res = await this.api.delete(this.DOMAIN, this.PATH + `/destroy_many?ids=${ids}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+                return res;
+            } catch (e) {
+                return `[purge] ${e}`;
+            }
+        }
 
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+        try {
+            const allTicketIds = readFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket.txt'), 'utf8');
+            const ticketIds = allTicketIds.split('\r\n');
+            const ticketChunks = this.splitIds(ticketIds);
+            
+            for (var chunk of ticketChunks) {
+                let chunkStr = chunk.join(',');
+                await this.api.delete(this.DOMAIN_WOWI, this.PATH + `/destroy_many?ids=${chunkStr}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+                delay(3000);
+            }
+        } catch (e) {
+            return `[purge] ${e}`;
+        }
+    }
 }
