@@ -12,6 +12,7 @@ import { log } from 'console';
 import { UsersService } from 'src/users/users.service';
 import { appendFileSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { ViewsService } from 'src/views/views.service';
 @Injectable()
 export class TicketsService {
     DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
@@ -26,9 +27,29 @@ export class TicketsService {
         private readonly organizationService: OrganizationsService,
         private readonly customStatusService: CustomStatusService,
         private readonly ticketFieldService: TicketFieldService,
-        private readonly userService: UsersService
+        private readonly userService: UsersService,
+        private readonly viewService: ViewsService
     ) {}
 
+    async sync(): Promise<any> {
+        let currentPage = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
+        let i = 0;
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+        while(currentPage.next_page) {
+            i++;
+            const tickets: Ticket[] = currentPage.tickets;
+            log(JSON.stringify(tickets[0]))
+            currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
+            // await this.TicketRepository.save(tickets);
+            await this.TicketRepository
+            .createQueryBuilder()
+            .insert()
+            .into(Ticket)
+            .values(tickets)
+            .orIgnore()
+            .execute();
+        }
+    }
     /**
      * Imports all data from various services. Everything else must be imported before tickets can be imported.
      *
@@ -45,6 +66,8 @@ export class TicketsService {
         log('Imported custom status');
         await this.ticketFieldService.migrate();
         log('Imported ticket field');
+        await this.viewService.migrate();
+        log('Imported view');
     }
 
     async getComments(ticketId: string): Promise<any> {
@@ -56,10 +79,10 @@ export class TicketsService {
         }
     }
 
-    splitTicket(tickets: Ticket[]): Ticket[][] {
+    splitTicket(tickets: any[]): any[][] {
         const chunkSize = 100;
         const totalChunks = Math.ceil(tickets.length / chunkSize);
-        const chunks: Ticket[][] = [];
+        const chunks: any[][] = [];
 
         for (let i = 0; i < totalChunks; i++) {
             const start = i * chunkSize;
@@ -93,34 +116,57 @@ export class TicketsService {
         return ticket;
     }
 
+    async saveDone(tickets: any[]): Promise<any> {
+
+        let allTicketIds: string = '';
+        for (const ticket of tickets) {
+            allTicketIds += ticket.id + "\n";
+        }
+
+        appendFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket_oldIds.txt'), allTicketIds);
+    }
+
+    async readDone(): Promise<string> {
+        try {
+            return readFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket_oldIds.txt'), 'utf8');
+        } catch (e) {
+            return '';
+        }
+    }
+
     async migrate(): Promise<any> {
         await this.importAll();
         // return "true";
         let currentPage = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
         let i = 0;
         const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // const old_brands: any[] = await this.brandService.old_brands();
+        // const new_brands: any[] = await this.brandService.new_brands();
+
+        const old_groups: any[] = await this.groupService.getOldGroups();
+        const new_groups: any[] = await this.groupService.getNewGroups();
+
+        const old_organizations: any[] = await this.organizationService.getOldOrg();
+        const new_organizations: any[] = await this.organizationService.getNewOrg();
+
+        const old_custom_statuses: any[] = await this.customStatusService.old_custom_statuses();
+        const new_custom_statuses: any[] = await this.customStatusService.new_custom_statuses();
+
+        const old_ticket_fields: any[] = await this.ticketFieldService.old_ticket_fields();
+        const new_ticket_fields: any[] = await this.ticketFieldService.new_ticket_fields();
+
         while(currentPage.next_page) {
             i++;
             // const data: Ticket[] = currentPage.tickets;
             const data: any[] = currentPage.tickets;
             currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
             
-            // const old_brands: any[] = await this.brandService.old_brands();
-            // const new_brands: any[] = await this.brandService.new_brands();
-
-            const old_groups: any[] = await this.groupService.getOldGroups();
-            const new_groups: any[] = await this.groupService.getNewGroups();
-
-            const old_organizations: any[] = await this.organizationService.getOldOrg();
-            const new_organizations: any[] = await this.organizationService.getNewOrg();
-
-            const old_custom_statuses: any[] = await this.customStatusService.old_custom_statuses();
-            const new_custom_statuses: any[] = await this.customStatusService.new_custom_statuses();
-
-            const old_ticket_fields: any[] = await this.ticketFieldService.old_ticket_fields();
-            const new_ticket_fields: any[] = await this.ticketFieldService.new_ticket_fields();
-
             for(var ticket of data) {
+
+                if ((await this.readDone()).includes(ticket.id)) {
+                    continue;
+                }
 
                 const new_Ids: Array<number> = [];
 
@@ -261,7 +307,7 @@ export class TicketsService {
 
             // return;
 
-            let chunks: Ticket[][] = this.splitTicket(data); // split tickets into chunks of 50
+            let chunks: any[][] = this.splitTicket(data); // split tickets into chunks of 50
 
             for (const chunk of chunks) {
                 const request = JSON.parse(JSON.stringify({chunk})).chunk;
@@ -281,7 +327,8 @@ export class TicketsService {
                         Ids += ticket.id + '\n';
                     }
 
-                    appendFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket.txt'), Ids);
+                    appendFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket_newIds.txt'), Ids);
+                    this.saveDone(JSON.parse(JSON.stringify({chunk})).chunk);
 
                 }
 

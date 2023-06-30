@@ -1,5 +1,5 @@
 import { Source } from "src/source/entities/source.entity";
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class To {
@@ -12,6 +12,7 @@ export class To {
     @Column('varchar', {nullable: true, default: null})
     name: string;
 
-    @OneToOne(() => Source, (source: Source) => source.to)
-    source: any;
+    @ManyToMany(() => Source, (source: Source) => source.to)
+    @JoinTable()
+    source: Source;
 }

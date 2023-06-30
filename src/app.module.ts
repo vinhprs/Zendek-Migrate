@@ -34,6 +34,7 @@ import { BrandModule } from './brand/brand.module';
 import { CustomStatusModule } from './custom-status/custom-status.module';
 import { CustomStatus } from './custom-status/entities/custom-status.entity';
 import { TicketFieldModule } from './ticket-field/ticket-field.module';
+import { ViewsModule } from './views/views.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { TicketFieldModule } from './ticket-field/ticket-field.module';
     BrandModule,
     CustomStatusModule,
     TicketFieldModule,
+    ViewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -11,6 +11,7 @@ import { GroupsModule } from 'src/groups/groups.module';
 import { OrganizationsModule } from 'src/organizations/organizations.module';
 import { TicketFieldModule } from 'src/ticket-field/ticket-field.module';
 import { UsersModule } from 'src/users/users.module';
+import { ViewsModule } from 'src/views/views.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { UsersModule } from 'src/users/users.module';
     GroupsModule,
     OrganizationsModule,
     TicketFieldModule,
-    UsersModule
+    UsersModule,
+    ViewsModule
   ],
   controllers: [TicketsController],
   providers: [TicketsService, Api],

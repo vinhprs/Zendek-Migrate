@@ -1,7 +1,7 @@
 import { CustomField } from "src/custom-field/entities/custom-field.entity";
 import { Field } from "src/field/entities/field.entity";
 import { Via } from "src/via/entities/via.entity";
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryColumn } from "typeorm";
 
 @Entity()
 export class Ticket {
@@ -15,6 +15,7 @@ export class Ticket {
     url: string;
 
     @ManyToMany(() => Via, via => via.ticket)
+    @JoinTable()
     via: Via;
 
     @Column('timestamp', {nullable: true, default: null})
@@ -92,6 +93,7 @@ export class Ticket {
             'update',
         ]
     })
+    @JoinTable()
     custom_fields: CustomField[];
 
     @Column('bigint', {nullable: true, default: null})
@@ -109,6 +111,7 @@ export class Ticket {
             'update',
         ]
     })
+    @JoinTable()
     fields: Field[];
 
     @Column('bigint', {nullable: true, default: null, array: true})

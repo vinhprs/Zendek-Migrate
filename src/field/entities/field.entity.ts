@@ -1,5 +1,5 @@
 import { Ticket } from "src/tickets/ticket.entity";
-import { Column, Entity, ManyToMany, OneToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, PrimaryColumn } from "typeorm";
 
 @Entity()
 export class Field {
@@ -10,5 +10,6 @@ export class Field {
     value: string;
 
     @ManyToMany(() => Ticket, (ticket: Ticket) => ticket.custom_fields)
+    @JoinTable()
     ticket: Ticket;
 }

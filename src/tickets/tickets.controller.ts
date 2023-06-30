@@ -10,6 +10,11 @@ export class TicketsController {
   //     await this.ticketsService.syncTicket();
   //   }
 
+  @Get('todb')
+    async sync(): Promise<any> {
+      await this.ticketsService.sync();
+    }
+
   @Get()
     async migrate(): Promise<any> {
       await this.ticketsService.migrate();
