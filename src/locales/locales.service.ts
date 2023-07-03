@@ -8,8 +8,8 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class LocalesService {
-  DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
-  DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
+  DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
+  DOMAIN_WOWI: string = `https://${process.env.NEW_DOMAIN}.zendesk.com/api/v2`;
   PATH: string = '/locales';
   constructor(
     private readonly api: Api,

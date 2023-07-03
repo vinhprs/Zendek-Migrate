@@ -29,6 +29,7 @@ export class Api {
             .then((res) => res.data)
             .catch((e) => {
                 console.log(e.message)
+                return e;
             });
     }
 
@@ -52,9 +53,39 @@ export class Api {
             data
         }
         return firstValueFrom(this.httpService.request(axiosConfig))
-          .then((res) => res.data)
+          .then((res) => {
+            return res.data;
+          })
           .catch((e) => {
-              console.log(e.message, axiosConfig.data)
+              console.log(e.message, axiosConfig.data);
+              return e;
+          });
+    }
+
+    async delete(
+      domain: string,
+      path: string,
+      username: string,
+      password: string
+    ) : Promise<any> {
+        const axiosConfig = {
+            method: 'DELETE',
+            url: encodeURI(domain + path),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            auth: {
+                username,
+                password
+            }
+        }
+        return firstValueFrom(this.httpService.request(axiosConfig))
+          .then((res) => {
+            return res.data;
+          })
+          .catch((e) => {
+              console.log(e.data.error);
+              return e;
           });
     }
 }

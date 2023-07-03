@@ -9,11 +9,32 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { AttachmentsModule } from './attachments/attachments.module';
 import { Attachments } from './attachments/entities/attachment.entity';
 import { Organization } from './organizations/entities/organization.entity';
+import { TicketsModule } from './tickets/tickets.module';
+import { Ticket } from './tickets/ticket.entity';
+import { FieldModule } from './field/field.module';
+import { ViaModule } from './via/via.module';
+import { ChannelModule } from './channel/channel.module';
+import { SourceModule } from './source/source.module';
+import { FromModule } from './from/from.module';
+import { From } from './from/entities/from.entity';
+import { Source } from './source/entities/source.entity';
+import { Channel } from './channel/entities/channel.entity';
+import { Via } from './via/entities/via.entity';
+import { Field } from './field/entities/field.entity';
+import { ToModule } from './to/to.module';
+import { To } from './to/entities/to.entity';
 import { LocalesModule } from './locales/locales.module';
 import { Locale } from './locales/entities/locale.entity';
 import { GroupsModule } from './groups/groups.module';
 import { Groups } from './groups/entities/group.entity';
 import { CustomRolesModule } from './custom-roles/custom-roles.module';
+import { CustomFieldModule } from './custom-field/custom-field.module';
+import { CustomField } from './custom-field/entities/custom-field.entity';
+import { BrandModule } from './brand/brand.module';
+import { CustomStatusModule } from './custom-status/custom-status.module';
+import { CustomStatus } from './custom-status/entities/custom-status.entity';
+import { TicketFieldModule } from './ticket-field/ticket-field.module';
+import { ViewsModule } from './views/views.module';
 
 @Module({
   imports: [
@@ -31,17 +52,38 @@ import { CustomRolesModule } from './custom-roles/custom-roles.module';
         User,
         Attachments,
         Organization,
+        Ticket,
+        Field,
+        Via,
+        Channel,
+        Source,
+        From,
+        To,
         Locale,
-        Groups
+        Groups,
+        CustomField,
+        CustomStatus
       ],
       synchronize: true,
     }),
     UsersModule,
     OrganizationsModule,
     AttachmentsModule,
+    TicketsModule,
+    FieldModule,
+    ViaModule,
+    ChannelModule,
+    SourceModule,
+    FromModule,
+    ToModule,
     LocalesModule,
     GroupsModule,
-    CustomRolesModule
+    CustomRolesModule,
+    CustomFieldModule,
+    BrandModule,
+    CustomStatusModule,
+    TicketFieldModule,
+    ViewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

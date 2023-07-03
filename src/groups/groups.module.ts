@@ -9,7 +9,7 @@ import { Api } from '../fetch/zendesk';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Groups]),
-    HttpModule
+    HttpModule,
   ],
   controllers: [GroupsController],
   providers: [GroupsService, Api],

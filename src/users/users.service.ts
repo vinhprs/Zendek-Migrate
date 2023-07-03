@@ -9,10 +9,11 @@ import { Attachments } from '../attachments/entities/attachment.entity';
 import { CustomRolesService } from '../custom-roles/custom-roles.service';
 import { GroupsService } from '../groups/groups.service';
 import { OrganizationsService } from '../organizations/organizations.service';
+import { log } from 'console';
 @Injectable()
 export class UsersService {
-    DOMAIN: string = 'https://suzumlmhelp.zendesk.com/api/v2';
-    DOMAIN_WOWI: string = "https://wowihelp.zendesk.com/api/v2";
+    DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
+    DOMAIN_WOWI: string = `https://${process.env.NEW_DOMAIN}.zendesk.com/api/v2`;
     PATH: string = '/users'
     constructor(
         @InjectRepository(User)
@@ -37,10 +38,10 @@ export class UsersService {
             }
             // await this.UserRepository.save(users);
 
-        }
-        const users: User[] = currentPage.users;
-        // await this.UserRepository.save(users);
     }
+    const users: User[] = currentPage.users;
+    // await this.UserRepository.save(users);
+  }
 
     async migrate()
         : Promise<any> {
@@ -71,4 +72,42 @@ export class UsersService {
             await this.api.post(this.DOMAIN_WOWI, this.PATH, request, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
         }
     }
+
+    async getOldUser(Id: string): Promise<User> {
+        try {
+            let res = await this.api.get(this.DOMAIN, this.PATH + `/${Id}`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
+            return res.user as User;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async getNewUser(Id: string): Promise<User> {
+        try {
+            let res = await this.api.get(this.DOMAIN_WOWI, this.PATH + `/${Id}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+            return res.user as User;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async searchNewUser(query: string): Promise<User> | null {
+        try {
+            let res = await this.api.get(this.DOMAIN_WOWI, this.PATH + `?query=${query}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+            return res.users[0] as User;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async getOldAgents(): Promise<User[]> {
+        const data = await this.api.get(this.DOMAIN, this.PATH + '?role[]=admin&role[]=agent', process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
+        return data.users;
+    }
+
+    async getNewAgents(): Promise<User[]> {
+        const data = await this.api.get(this.DOMAIN_WOWI, this.PATH + '?role[]=admin&role[]=agent', process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
+        return data.users;
+    }
+
 }
