@@ -27,4 +27,20 @@ export class TicketsController {
       }
       return await this.ticketsService.purge();
     }
+
+  @Get('purgerenume')
+    async purgeRenume(@Query('page') page: number = 1): Promise<any> {
+      return await this.ticketsService.purgeRenume(page);
+    }
+
+  @Get('syncsubject')
+    async syncSubject(): Promise<any> {
+      return await this.ticketsService.syncTicketBySubject();
+    }
+
+  @Get('importmissing')
+    async importMissingTickets(): Promise<any> {
+      return await this.ticketsService.importMissingTickets();
+    }
+
 }

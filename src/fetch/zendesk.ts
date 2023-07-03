@@ -29,6 +29,7 @@ export class Api {
             .then((res) => res.data)
             .catch((e) => {
                 console.log(e.message)
+                return e;
             });
     }
 
