@@ -7,7 +7,6 @@ export class UsersController {
         private readonly usersService: UsersService
     ) {}
 
-
     @Get()
     async syncUsers()
     : Promise<any> {

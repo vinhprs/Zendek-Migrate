@@ -10,11 +10,10 @@ import { CustomStatusService } from 'src/custom-status/custom-status.service';
 import { TicketFieldService } from 'src/ticket-field/ticket-field.service';
 import { log } from 'console';
 import { UsersService } from 'src/users/users.service';
-import { appendFileSync, read, readFileSync, writeFileSync } from 'fs';
+import { appendFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { ViewsService } from 'src/views/views.service';
 import { User } from 'src/users/users.entity';
-import { retry } from 'rxjs';
 @Injectable()
 export class TicketsService {
     DOMAIN: string = `https://${process.env.OLD_DOMAIN}.zendesk.com/api/v2`;
@@ -138,14 +137,6 @@ export class TicketsService {
         return chunks;
     }
 
-    replaceObjectId(ticket: Ticket, old_content: string, new_content: string): Ticket {
-        let StrTicket: string = JSON.stringify(ticket);
-        StrTicket = StrTicket.replace(old_content, new_content);
-        ticket = JSON.parse(StrTicket);
-
-        return ticket;
-    }
-
     findUser(Id: number, crawledUsers: User[]): User {
         try {
             return crawledUsers.find((user: User) => user.id == Id);
@@ -166,7 +157,6 @@ export class TicketsService {
 
     async readDone(): Promise<string[]> {
         try {
-            // return readFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket_oldIds.txt'), 'utf8').toString().split('\n');
             return readFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket_oldIds.txt'), 'utf8').toString().split('\n');
         } catch (e) {
             return [''];
@@ -450,273 +440,5 @@ export class TicketsService {
         }
 
         log("Done importing");
-    }
-    async purge(ids: number[] = null) {
-        if (ids) {
-            try {
-                let res = await this.api.delete(this.DOMAIN, this.PATH + `/destroy_many?ids=${ids}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
-                return res;
-            } catch (e) {
-                return `[purge] ${e}`;
-            }
-        }
-
-        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-        try {
-            const allTicketIds = readFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket.txt'), 'utf8');
-            const ticketIds = allTicketIds.split('\r\n');
-            const ticketChunks = this.splitIds(ticketIds);
-            
-            for (var chunk of ticketChunks) {
-                let chunkStr = chunk.join(',');
-                await this.api.delete(this.DOMAIN_WOWI, this.PATH + `/destroy_many?ids=${chunkStr}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
-                delay(3000);
-            }
-        } catch (e) {
-            return `[purge] ${e}`;
-        }
-    }
-
-    async purgeRenume(page: number) {
-        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-        try {
-            const allTickets = await this.api.get(this.DOMAIN_WOWI, '/search' + `?page=${page}&query=type:ticket status:closed brand:renume`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
-            const renumeTickets = allTickets.results.filter(ticket => ticket.brand_id == 11490025455513);
-            const ticketIds: any[] = renumeTickets.map(ticket => ticket.id);
-            const ticketChunks = this.splitIds(ticketIds);
-
-            console.log(ticketChunks);
-
-            for (var chunk of ticketChunks) {
-                let chunkStr = chunk.join(',');
-                const res = await this.api.delete(this.DOMAIN_WOWI, this.PATH + `/destroy_many?ids=${chunkStr}`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
-                log(res);
-                delay(3000);
-            }
-
-        } catch (e) {
-            return `[purgeRenume] ${e}`;
-        }
-    }
-
-    async syncTicketBySubject() {
-        // const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-        let currentPage = await this.api.get(this.DOMAIN, this.PATH, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
-        let i = 0;
-        while (currentPage.next_page) {
-            i++;
-
-            let data: any[] = currentPage.tickets;
-            currentPage = await this.api.get(this.DOMAIN, this.PATH + `?page=${i}`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD);
-            
-            // const done = await this.readDone();
-
-            for (var ticket of data) {
-                // search for ticket subject in the new website
-                const subject = ticket.subject;
-
-                let resp = await this.api.get(this.DOMAIN_WOWI, `/search?query=type:ticket subject:${subject} status:${ticket.status} brand:renume`, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
-
-                if (resp.results.length > 2) {
-                    appendFileSync(join(__dirname, '..', '..', 'logs', 'duplicatedTicket.txt'), ticket.id + '\n');
-                    continue;
-                }
-                if (resp.results.length == 0) {
-
-                    appendFileSync(join(__dirname, '..', '..', 'logs', 'missingTicket.txt'), ticket.id + '\n');
-                    continue;
-                }
-            }
-        }
-    }
-
-    async importMissingTickets() {
-
-        const old_organizations: any[] = await this.organizationService.getOldOrg();
-        const new_organizations: any[] = await this.organizationService.getNewOrg();
-
-        const old_custom_statuses: any[] = await this.customStatusService.old_custom_statuses();
-        const new_custom_statuses: any[] = await this.customStatusService.new_custom_statuses();
-
-        const old_ticket_fields: any[] = await this.ticketFieldService.old_ticket_fields();
-        const new_ticket_fields: any[] = await this.ticketFieldService.new_ticket_fields();
-
-        const old_agents = await this.userService.getOldAgents();
-        const new_agents = await this.userService.getNewAgents();
-
-
-        const fileData = readFileSync(join(__dirname, '..', '..', 'logs', 'missingTicket.txt'), 'utf8');
-        const lines = fileData.split('\n');
-
-        // lines.forEach(line => {
-        //     if (!line.trim()) return;
-        //     log("line", line);
-        // })
-
-        const done = await this.readDone();
-
-        // const promises = lines.map(async (ticketId) => {
-        // await lines.forEach(async (ticketId) => {
-        for (let ticketId of lines) {
-            
-            try {
-
-                if (!ticketId.trim()) {
-                    return;
-                }
-                
-                if (done.includes(ticketId)) {
-                    continue;
-                }
-
-                log("ticketId", ticketId);
-                let ticket = (await this.api.get(this.DOMAIN, this.PATH + `/${ticketId}`, process.env.OLD_ZENDESK_USERNAME, process.env.OLD_ZENDESK_PASSWORD)).ticket;
-
-                if (ticket.brand_id) {
-                    ticket.brand_id = 11490025455513;
-                }
-                ticket.group_id = 20168083520281;
-
-                if (ticket.organization_id) {
-                    const old_organization = old_organizations.find(organization => organization.id === ticket.organization_id);
-                    const new_organization = new_organizations.find(organization => organization.name == old_organization.name);
-                    ticket.organization_id = new_organization.id;
-
-                    log("New organization: " + new_organization.name);
-                }
-
-                if (ticket.custom_status_id) {
-                    const old_custom_status = old_custom_statuses.find(custom_status => custom_status.id === ticket.custom_status_id);
-                    const new_custom_status = new_custom_statuses.find(custom_status => custom_status.raw_agent_label == old_custom_status.raw_agent_label && custom_status.raw_agent_label == old_custom_status.raw_agent_label);
-                    ticket.custom_status_id = new_custom_status.id;
-                }
-
-                if (ticket.custom_fields) {
-                    for (const ticket_field of ticket.custom_fields) {
-                        const old_ticket_field = old_ticket_fields.find(ticket_field => ticket_field.id === ticket_field.id);
-                        const new_ticket_field = new_ticket_fields.find(ticket_field => ticket_field.name == old_ticket_field.name);
-                        ticket_field.id = new_ticket_field.id;
-                    }
-                }
-
-                if (ticket.requester_id) {
-                    const old_requester = await this.userService.getOldUser(ticket.requester_id);
-                    let new_requester: any = await this.userService.searchNewUser(old_requester.email);
-
-                    if (!new_requester) {
-                        log("New requester not found!");
-                        console.log(old_requester.email);
-                        new_requester = this.mappingID(ticket.requester_id, old_agents, new_agents);
-                    };
-
-                    log("new requester", new_requester.email);
-                    ticket.requester_id = new_requester.id;
-                }
-
-                if (ticket.submitter_id) {
-                    const old_submitter = await this.userService.getOldUser(ticket.submitter_id);
-                    let new_submitter = await this.userService.searchNewUser(old_submitter.email);
-
-                    if (!new_submitter) {
-                        new_submitter = this.mappingID(ticket.submitter_id, old_agents, new_agents);
-                    }
-                    ticket.submitter_id = new_submitter.id;
-                }
-
-                if (ticket.assignee_id) {
-                    // const old_assignee = await this.userService.getOldUser(ticket.assignee_id);
-                    // let new_assignee = await this.userService.searchNewUser(old_assignee.email);
-                    let new_assignee = null;
-                    // if (new_assignee.id==12525390645401) {
-                    //     new_assignee = null;
-                    // }
-
-                    if (!new_assignee) {
-                        new_assignee = this.mappingID(ticket.assignee_id, old_agents, new_agents);
-                    }
-                    ticket.assignee_id = new_assignee.id;
-                }
-
-                // if (ticket.status == "open") {
-                //     ticket.assignee_id = 19262149092889;
-                // }
-
-                if (ticket.collaborator_ids?.length > 0) {
-                    for (const collaborator_id of ticket.collaborator_ids) {
-                        const old_collaborator = await this.userService.getOldUser(collaborator_id);
-                        let new_collaborator = await this.userService.searchNewUser(old_collaborator.email);
-
-                        if (!new_collaborator) {
-                            new_collaborator = this.mappingID(collaborator_id, old_agents, new_agents);
-                        }
-                        ticket.collaborator_ids[ticket.collaborator_ids.indexOf(collaborator_id)] = new_collaborator.id;
-                    }
-                }
-
-                if (ticket.follower_ids?.length > 0) {
-                    for (const follower_id of ticket.follower_ids) {
-                        const old_follower = await this.userService.getOldUser(follower_id);
-                        let new_follower = await this.userService.searchNewUser(old_follower.email);
-
-                        if (!new_follower) {
-                            new_follower = this.mappingID(follower_id, old_agents, new_agents);
-                        }
-                        ticket.follower_ids[ticket.follower_ids.indexOf(follower_id)] = new_follower.id;
-                    }
-                }
-
-                if (ticket.email_cc_ids.length > 0) {
-                    for (const email_cc_id of ticket.email_cc_ids) {
-                        // if (new_Ids.includes(email_cc_id)) return;
-                        const old_email_cc = await this.userService.getOldUser(email_cc_id);
-                        let new_email_cc = await this.userService.searchNewUser(old_email_cc.email);
-
-                        if (!new_email_cc) {
-                            new_email_cc = this.mappingID(email_cc_id, old_agents, new_agents);
-                        }
-
-                        ticket.email_cc_ids[ticket.email_cc_ids.indexOf(email_cc_id)] = new_email_cc.id;
-                }}
-
-                // get ticket comments
-                let comments: any = await this.getComments(ticket.id.toString());
-                let new_comments = (comments.comments as Array<any>).map(async (comment) =>
-                    {
-                        const old_author = await this.userService.getOldUser(comment.author_id);
-                        let new_author = await this.userService.searchNewUser(old_author.email);
-
-                        if (!new_author) {
-                            new_author = this.mappingID(comment.author_id, old_agents, new_agents);
-                        }
-
-                        let newAuthorId = new_author.id;
-
-                        return ({
-                            author_id: newAuthorId,
-                            created_at: comment.created_at,
-                            value: comment.body
-                        })
-
-                    })
-
-                ticket.comments = await Promise.all(new_comments);
-                delete ticket.url;
-
-                let res = await this.api.post(this.DOMAIN_WOWI, `/imports/tickets`, {
-                    "ticket": ticket
-                }, process.env.NEW_ZENDESK_USERNAME, process.env.NEW_ZENDESK_PASSWORD);
-                try {
-                    log(JSON.stringify(res.response.data));
-                    continue;
-                } catch {
-                };
-                appendFileSync(join(__dirname, '..', '..', 'logs', 'importedTicket.txt'), JSON.stringify(res) + '\n');
-                this.saveDone([ticket]);
-            } catch (e) {
-                log(e);
-            }
-        };
-
-        // await Promise.all(promises);
     }
 }
