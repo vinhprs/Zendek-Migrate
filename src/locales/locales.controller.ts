@@ -1,7 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { LocalesService } from './locales.service';
-import { CreateLocaleDto } from './dto/create-locale.dto';
-import { UpdateLocaleDto } from './dto/update-locale.dto';
 import { Locale } from './entities/locale.entity';
 
 @Controller('locales')
